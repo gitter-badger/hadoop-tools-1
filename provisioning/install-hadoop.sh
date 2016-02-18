@@ -44,9 +44,7 @@ javac -version
 
 echo "Configuring SSH...."
 mkdir -p ~/.ssh
-
-ssh-keygen -f ~/.ssh/id_rsa  -t rsa -N ''
-
+ssh-keygen -f ~/.ssh/id_rsa -t rsa -N ''
 cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys
 
 cat > ~/.ssh/config << EOL
@@ -57,6 +55,27 @@ Host localhost
     StrictHostKeyChecking no
     UserKnownHostsFile=/dev/null
 EOL
+
+useradd hadoop
+gpasswd -a hadoop wheel
+
+chmod 640 /etc/sudoers
+echo "%wheel  ALL=(ALL)       NOPASSWD: ALL" >> /etc/sudoers
+
+echo "Configuring SSH for hadoop user...."
+su - hadoop -c "ssh-keygen -f ~/.ssh/id_rsa -t rsa -N ''"
+su - hadoop -c "cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys"
+su - hadoop -c "cat /tmp/id_rsa.pub >> ~/.ssh/authorized_keys"
+su - hadoop -c "chmod 644 ~/.ssh/authorized_keys"
+su - hadoop -c "cat > ~/.ssh/config << EOL
+Host *.*.*.*
+    StrictHostKeyChecking no
+    UserKnownHostsFile=/dev/null
+Host localhost
+    StrictHostKeyChecking no
+    UserKnownHostsFile=/dev/null
+EOL"
+su - hadoop -c "chmod 644 ~/.ssh/config"
 
 echo "Downloading Hadoop...."
 cd /usr/lib
@@ -70,6 +89,8 @@ mkdir -p /hdfs/name
 mkdir -p /hdfs/data
 mkdir -p /var/log/hadoop-yarn/containers
 mkdir -p /var/log/hadoop-yarn/apps
+mkdir -p /var/log/hadoop /usr/lib/hadoop/logs
+chown -R hadoop:hadoop /hdfs /var/log/hadoop-yarn /var/log/hadoop /usr/lib/hadoop/logs
 
 echo "Configuring Hadoop...."
 
@@ -77,11 +98,20 @@ cd /usr/lib/hadoop/etc/hadoop
 
 cat >> hadoop-env.sh << EOL
 export JAVA_HOME=/usr/lib/jvm/java-openjdk
+export HADOOP_LOG_DIR=/var/log/hadoop
 if [ "\$HADOOP_CLASSPATH" ]; then
   export HADOOP_CLASSPATH=\$HADOOP_CLASSPATH:/usr/lib/hadoop/share/hadoop/tools/lib/*
 else
   export HADOOP_CLASSPATH=/usr/lib/hadoop/share/hadoop/tools/lib/*
 fi
+EOL
+
+cat >> mapred-env.sh << EOL
+export HADOOP_MAPRED_LOG_DIR=/var/log/hadoop
+EOL
+
+cat >> yarn-env.sh << EOL
+export YARN_LOG_DIR=/var/log/hadoop
 EOL
 
 cat > core-site.xml << EOL
@@ -244,33 +274,39 @@ systemctl disable firewalld
 
 if [ "$mode" == "master" ]; then
   echo "Formatting HDFS...."
-  /usr/lib/hadoop/bin/hdfs namenode -format
+  su - hadoop -c '/usr/lib/hadoop/bin/hdfs namenode -format'
   echo "Formatting HDFS done"
 
   echo "Starting namenode...."
-  /usr/lib/hadoop/sbin/hadoop-daemons.sh \
-    --config "/usr/lib/hadoop/etc/hadoop" \
-    --script "/usr/lib/hadoop/bin/hdfs" start namenode
+  su - hadoop -c '/usr/lib/hadoop/sbin/hadoop-daemons.sh \
+    --config /usr/lib/hadoop/etc/hadoop \
+    --script /usr/lib/hadoop/bin/hdfs start namenode'
   echo "Starting namenode done"
 
   echo "Starting YARN resourcemanager...."
-  /usr/lib/hadoop/sbin/yarn-daemon.sh --config /usr/lib/hadoop/etc/hadoop start resourcemanager
+  su - hadoop -c '/usr/lib/hadoop/sbin/yarn-daemon.sh --config /usr/lib/hadoop/etc/hadoop start resourcemanager'
   echo "Starting YARN resourcemanager done"
 
   echo "Starting JobHistory server...."
-  /usr/lib/hadoop/sbin/mr-jobhistory-daemon.sh --config /usr/lib/hadoop/etc/hadoop start historyserver
+  su - hadoop -c '/usr/lib/hadoop/sbin/mr-jobhistory-daemon.sh --config /usr/lib/hadoop/etc/hadoop start historyserver'
   echo "Starting JobHistory server done"
 else
   echo "Starting datanode...."
-  /usr/lib/hadoop/sbin/hadoop-daemons.sh \
-    --config "/usr/lib/hadoop/etc/hadoop" \
-    --script "/usr/lib/hadoop/bin/hdfs" start datanode
+  su - hadoop -c '/usr/lib/hadoop/sbin/hadoop-daemons.sh \
+    --config /usr/lib/hadoop/etc/hadoop \
+    --script /usr/lib/hadoop/bin/hdfs start datanode'
   echo "Starting datanode done"
 
   echo "Starting YARN nodemanager...."
-  /usr/lib/hadoop/sbin/yarn-daemon.sh --config /usr/lib/hadoop/etc/hadoop start nodemanager
+  su - hadoop -c '/usr/lib/hadoop/sbin/yarn-daemon.sh --config /usr/lib/hadoop/etc/hadoop start nodemanager'
   echo "Starting YARN nodemanager done"
 fi
+
+su - hadoop -c 'cat >> ~/.bashrc << EOL
+export HADOOP_HOME=/usr/lib/hadoop
+export HADOOP_CONF_DIR=/usr/lib/hadoop/etc/hadoop
+export PATH=\$PATH:/usr/lib/hadoop/bin
+EOL'
 
 # echo "Testing MR..."
 # /usr/lib/hadoop/bin/hadoop jar /usr/lib/hadoop/share/hadoop/mapreduce/hadoop-mapreduce-examples-2.7.1.jar pi 10 1000

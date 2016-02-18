@@ -107,3 +107,4 @@ done
 echo "Resource Manager http://${master_hostname}:8088"
 echo "Namenode         http://${master_hostname}:50070"
 echo "Nodes List       http://ip-10-101-124-30:8088/ws/v1/cluster/nodes"
+echo "SSH              ssh hadoop@${master_hostname}"
