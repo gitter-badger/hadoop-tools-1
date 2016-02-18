@@ -29,9 +29,10 @@ mv spark-1.6.0-bin-hadoop2.6 spark
 rm -rf spark-1.6.0-bin-hadoop2.6.tgz
 
 mkdir -p /var/log/spark
+chown hadoop:hadoop /var/log/spark
 
-/usr/lib/hadoop/bin/hadoop fs -mkdir -p /var/log/spark/apps
-/usr/lib/hadoop/bin/hadoop fs -chmod g+w /var/log/spark/apps
+su - hadoop -c '/usr/lib/hadoop/bin/hadoop fs -mkdir -p /var/log/spark/apps'
+su - hadoop -c '/usr/lib/hadoop/bin/hadoop fs -chmod g+w /var/log/spark/apps'
 
 echo "Configuring Spark...."
 
@@ -69,5 +70,5 @@ export PATH=\$PATH:/usr/lib/spark/bin
 EOL
 
 echo "Starting spark history server...."
-/usr/lib/spark/sbin/start-history-server.sh
+su - hadoop -c '/usr/lib/spark/sbin/start-history-server.sh'
 echo "Starting spark history server done"

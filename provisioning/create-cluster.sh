@@ -90,6 +90,11 @@ cmd="/root/provisioning/set-hostnames.sh"
 ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null root@$ip $cmd
 echo "done"
 
+echo "Running add-users.sh"
+cmd="/root/provisioning/add-users.sh"
+ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null root@$ip $cmd
+echo "done"
+
 echo "Run install-master-soft.sh on background"
 cmd="nohup /root/provisioning/install-master-soft.sh $N $slave_mem ${AWS_ACCESS_KEY_ID} ${AWS_SECRET_ACCESS_KEY} > /root/install-master-soft.log 2>&1 < /dev/null &"
 ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null root@$ip $cmd

@@ -21,6 +21,7 @@ rm -rf spark-jobserver-0.6.1.tar.gz
 
 mkdir -p /var/log/spark-jobserver
 mkdir -p /var/spark-jobserver
+chown hadoop:hadoop /var/log/spark-jobserver /var/spark-jobserver
 
 echo "Configuring Spark-jobserver...."
 
@@ -29,7 +30,7 @@ APP_USER=root
 APP_GROUP=root
 INSTALL_DIR=/usr/lib/spark-jobserver
 LOG_DIR=/var/log/spark-jobserver
-PIDFILE=spark-jobserver.pid
+PIDFILE=/var/spark-jobserver/spark-jobserver.pid
 JOBSERVER_MEMORY=1G
 SPARK_VERSION=1.6.0
 SPARK_HOME=/usr/lib/spark
@@ -79,5 +80,5 @@ EOL
 echo "Configuring Spark-jobserver done"
 
 echo "Starting Spark-jobserver...."
-nohup /usr/lib/spark-jobserver/server_start.sh > /dev/null 2> /dev/null < /dev/null &
+su - hadoop -c `nohup /usr/lib/spark-jobserver/server_start.sh > /dev/null 2> /dev/null < /dev/null &`
 echo "Starting Spark-jobserver done"

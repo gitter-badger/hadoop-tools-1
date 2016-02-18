@@ -57,8 +57,8 @@ echo "Creating metastore DB done"
 
 cd -
 
-/usr/lib/hadoop/bin/hadoop fs -mkdir -p /tmp /user/hive/warehouse
-/usr/lib/hadoop/bin/hadoop fs -chmod g+w /tmp /user/hive/warehouse
+su - hadoop -c '/usr/lib/hadoop/bin/hadoop fs -mkdir -p /tmp /user/hive/warehouse'
+su - hadoop -c '/usr/lib/hadoop/bin/hadoop fs -chmod g+w /tmp /user/hive/warehouse'
 
 echo "Configuring Hive...."
 
@@ -128,8 +128,8 @@ mkdir conf
 
 echo "Configuring Tez...."
 
-/usr/lib/hadoop/bin/hadoop fs -mkdir -p /apps/
-/usr/lib/hadoop/bin/hadoop fs -put /usr/lib/tez-full /apps/tez-0.8.2
+su - hadoop -c '/usr/lib/hadoop/bin/hadoop fs -mkdir -p /apps/'
+su - hadoop -c '/usr/lib/hadoop/bin/hadoop fs -put /usr/lib/tez-full /apps/tez-0.8.2'
 
 cd /usr/lib/tez/conf
 cat > tez-site.xml << EOL

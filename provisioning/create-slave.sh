@@ -56,6 +56,11 @@ cmd="/root/provisioning/set-hostnames.sh"
 ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null root@$ip $cmd
 echo "done"
 
+echo "Running add-users.sh"
+cmd="/root/provisioning/add-users.sh"
+ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null root@$ip $cmd
+echo "done"
+
 echo "Running install-hadoop.sh"
 cmd="nohup /root/provisioning/install-hadoop.sh ${master} $slave_mem ${AWS_ACCESS_KEY_ID} ${AWS_SECRET_ACCESS_KEY} > install-hadoop.log 2>&1 < /dev/null &"
 ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null root@$ip $cmd

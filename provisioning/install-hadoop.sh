@@ -42,41 +42,6 @@ java -version
 
 javac -version
 
-echo "Configuring SSH...."
-mkdir -p ~/.ssh
-ssh-keygen -f ~/.ssh/id_rsa -t rsa -N ''
-cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys
-
-cat > ~/.ssh/config << EOL
-Host *.*.*.*
-    StrictHostKeyChecking no
-    UserKnownHostsFile=/dev/null
-Host localhost
-    StrictHostKeyChecking no
-    UserKnownHostsFile=/dev/null
-EOL
-
-useradd hadoop
-gpasswd -a hadoop wheel
-
-chmod 640 /etc/sudoers
-echo "%wheel  ALL=(ALL)       NOPASSWD: ALL" >> /etc/sudoers
-
-echo "Configuring SSH for hadoop user...."
-su - hadoop -c "ssh-keygen -f ~/.ssh/id_rsa -t rsa -N ''"
-su - hadoop -c "cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys"
-su - hadoop -c "cat /tmp/id_rsa.pub >> ~/.ssh/authorized_keys"
-su - hadoop -c "chmod 644 ~/.ssh/authorized_keys"
-su - hadoop -c "cat > ~/.ssh/config << EOL
-Host *.*.*.*
-    StrictHostKeyChecking no
-    UserKnownHostsFile=/dev/null
-Host localhost
-    StrictHostKeyChecking no
-    UserKnownHostsFile=/dev/null
-EOL"
-su - hadoop -c "chmod 644 ~/.ssh/config"
-
 echo "Downloading Hadoop...."
 cd /usr/lib
 wget -q http://apache.mirrors.pair.com/hadoop/common/hadoop-2.7.1/hadoop-2.7.1.tar.gz
